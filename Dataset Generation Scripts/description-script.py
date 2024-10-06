@@ -22,7 +22,7 @@ def get_urdu_description(urdu_word, api_key):
 
 # Load the CSV file
 input_file = r"D:\FAST\FYP\DataSets\Words-list\Updated-words.csv"
-api_key = 'http://127.0.0.1/google-translate-dummy/language/translate/v2/languages?key=API_KEY'
+api_key = ''
 
 df = pd.read_csv(input_file)
 
