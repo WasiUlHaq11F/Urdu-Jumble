@@ -116,8 +116,6 @@ const UserProgressPage = () => {
           <Icon name="person-circle" size={80} color="#fff" />
           <Text style={styles.headerText}>Your Progress</Text>
         </View>
-
-        {/* Streak Progress */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Icon name="flame" size={30} color="#FF5722" />
@@ -160,14 +158,16 @@ const UserProgressPage = () => {
               Points:{" "}
               <Text style={styles.statValue}>{userData.easyPoints}</Text>
             </Text>
-            <Progress.Bar
-              progress={userData.currentEasyRound / 5}
-              width={width * 0.8}
-              color="#4CAF50"
-              height={10}
-              borderRadius={5}
-              style={styles.progressBar}
-            />
+            {userData && userData.currentEasyRound && (
+              <Progress.Bar
+                progress={userData.currentEasyRound / 5}
+                width={width * 0.8}
+                color="#4CAF50"
+                height={10}
+                borderRadius={5}
+                style={styles.progressBar}
+              />
+            )}
             <Text style={styles.progressText}>
               Round {userData.currentEasyRound} of 5
             </Text>
@@ -179,7 +179,6 @@ const UserProgressPage = () => {
             style={styles.animation}
           />
         </View>
-
         {/* Medium Level Progress */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -203,15 +202,16 @@ const UserProgressPage = () => {
               Points:{" "}
               <Text style={styles.statValue}>{userData.mediumPoints}</Text>
             </Text>
-
-            <Progress.Bar
-              progress={userData.currentMediumRound / 5}
-              width={width * 0.8}
-              color="#2196F3"
-              height={10}
-              borderRadius={5}
-              style={styles.progressBar}
-            />
+            {userData && userData.currentMediumRound && (
+              <Progress.Bar
+                progress={userData.currentMediumRound / 5}
+                width={width * 0.8}
+                color="#2196F3"
+                height={10}
+                borderRadius={5}
+                style={styles.progressBar}
+              />
+            )}
             <Text style={styles.progressText}>
               Round {userData.currentMediumRound} of 5
             </Text>
@@ -223,7 +223,6 @@ const UserProgressPage = () => {
             style={styles.animation}
           />
         </View>
-
         {/* Hard Level Progress */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -235,14 +234,16 @@ const UserProgressPage = () => {
               Points:{" "}
               <Text style={styles.statValue}>{userData.hardPoints}</Text>
             </Text>
-            <Progress.Bar
-              progress={userData.hardPoints / 1000}
-              width={width * 0.8}
-              color="#9C27B0"
-              height={10}
-              borderRadius={5}
-              style={styles.progressBar}
-            />
+            {userData && userData.hardPoints && (
+              <Progress.Bar
+                progress={userData.hardPoints / 1000}
+                width={width * 0.8}
+                color="#9C27B0"
+                height={10}
+                borderRadius={5}
+                style={styles.progressBar}
+              />
+            )}
             <Text style={styles.progressText}>
               Progress towards 1000 points
             </Text>
@@ -254,7 +255,6 @@ const UserProgressPage = () => {
             style={styles.animation}
           />
         </View>
-
         {/* Bonus Level Progress */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -266,14 +266,16 @@ const UserProgressPage = () => {
               Current Bonus Level:{" "}
               <Text style={styles.statValue}>{userData.currentBonusLevel}</Text>
             </Text>
-            <Progress.Bar
-              progress={userData.currentBonusLevel / 10}
-              width={width * 0.8}
-              color="#FFC107"
-              height={10}
-              borderRadius={5}
-              style={styles.progressBar}
-            />
+            {userData && userData.currentBonusLevel && (
+              <Progress.Bar
+                progress={userData.currentBonusLevel / 10}
+                width={width * 0.8}
+                color="#FFC107"
+                height={10}
+                borderRadius={5}
+                style={styles.progressBar}
+              />
+            )}
             <Text style={styles.progressText}>
               Bonus Level {userData.currentBonusLevel} of 10
             </Text>
@@ -285,10 +287,9 @@ const UserProgressPage = () => {
             style={styles.animation}
           />
         </View>
-
         {/* Share Button */}
         <View style={styles.shareButtonContainer}>
-          <Button title="Share Progress" onPress={handleShare} color="black" />
+          <Button title="Share Progress" onPress={handleShare} />
         </View>
       </ScrollView>
     </ViewShot>
