@@ -1,37 +1,9 @@
-import React, { useState } from "react";
 import { View, Text, ImageBackground, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import dataset from "../assets/datasets/final_Dataset.json";
-import { useNavigation } from "@react-navigation/native";
-import CrossWordData from "../assets/datasets/CrossWordData";
+import React from "react";
+import { styled } from "nativewind";
 import { Audio } from "expo-av";
-const MainMenuScreen = () => {
-  const [level, SetLevel] = useState("");
-  const [filteredWords, SetFilteredWords] = useState("");
-  const navigation = useNavigation();
 
-  function handlePress(level) {
-    playLetterTouchAudio();
-    SetLevel(level);
-    console.log(`The User Selected the ${level}`);
-
-    let localFilteredWords = [];
-
-    if (level === "Crossword") {
-      localFilteredWords = CrossWordData;
-    } else if (level === "Hard") {
-      const easyWords = dataset.filter((item) => item.Level === "Easy");
-      const mediumWords = dataset.filter((item) => item.Level === "Medium");
-      localFilteredWords = [...easyWords, ...mediumWords];
-    } else {
-      localFilteredWords = dataset.filter((item) => item.Level === level);
-    }
-
-    // Use the filtered words for navigation
-    SetFilteredWords(localFilteredWords);
-    navigation.navigate(level + "Game", { filteredWords: localFilteredWords });
-  }
-
+const HomeScreen = ({ navigation }) => {
   const playLetterTouchAudio = async () => {
     try {
       const soundObject = new Audio.Sound();
@@ -51,48 +23,39 @@ const MainMenuScreen = () => {
     }
   };
 
+  function handlePress(option) {
+    playLetterTouchAudio();
+    navigation.navigate(option);
+  }
+
   return (
-    <ImageBackground
-      source={require("../assets/images/background.svg")}
-      resizeMode="cover"
-      className="flex-1 items-center justify-center" // Wrap all content inside ImageBackground
-    >
-      <SafeAreaView className="flex-1 items-center justify-end bottom-20 w-full">
-        <TouchableOpacity
-          onPress={() => handlePress("Easy")}
-          className="bg-green-700 border-4 border-black shadow-lg shadow-green-500 rounded-lg mt-5 w-4/5 p-4"
-        >
-          <Text className="text-center font-bold text-xl text-white uppercase">
-            Easy
-          </Text>
+    <View className="flex-1">
+      <ImageBackground
+        source={require("../assets/images/background.svg")}
+        resizeMode="cover"
+        className="flex-1 justify-center items-center w-full h-full"
+      ></ImageBackground>
+      <View className="absolute bottom-16 w-full px-4">
+        <TouchableOpacity onPress={() => handlePress("MainMenuScreen")}>
+          <View
+            style={{ backgroundColor: "#ECE034" }}
+            className="border-4 shadow-lg shadow-yellow-500 border-black rounded-lg mt-5 w-full h-[80] p-4"
+          >
+            <Text className="text-center font-bold text-xl text-yellow-900">
+              Play
+            </Text>
+          </View>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => handlePress("Medium")}
-          className="bg-yellow-400 shadow-lg shadow-yellow-500 border-4 border-black rounded-lg mt-5 w-4/5 p-4"
-        >
-          <Text className="text-center font-bold text-xl text-black uppercase">
-            Medium
-          </Text>
+        <TouchableOpacity onPress={() => handlePress("UserProgress")}>
+          <View className="border-4 shadow-lg bg-purple-500 shadow-yellow-500 border-black rounded-lg mt-5 w-full h-[80] p-4">
+            <Text className="text-center font-bold text-xl text-black">
+              User Progress
+            </Text>
+          </View>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => handlePress("Hard")}
-          className="bg-red-700 border-4 shadow-lg shadow-red-500 border-black rounded-lg mt-5 w-4/5 p-4"
-        >
-          <Text className="text-center font-bold text-xl text-white uppercase">
-            Hard
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => handlePress("Crossword")}
-          className="bg-purple-700 shadow-lg shadow-purple-500 border-4 border-black rounded-lg mt-5 w-4/5 p-4"
-        >
-          <Text className="text-center font-bold text-xl text-white uppercase">
-            Bonus
-          </Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    </ImageBackground>
+      </View>
+    </View>
   );
 };
 
-export default MainMenuScreen;
+export default HomeScreen;
