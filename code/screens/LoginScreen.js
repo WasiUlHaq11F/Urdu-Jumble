@@ -129,7 +129,7 @@ const LoginScreen = () => {
         >
           <View>
             <Image
-              className="w-[400] h-[350] pb-10"
+              className="w-[400] h-[300] pb-10"
               source={require("../assets/images/Logo.svg")}
             />
           </View>
@@ -140,7 +140,7 @@ const LoginScreen = () => {
               textContentType="emailAddress"
               value={email}
               onChangeText={(text) => setEmail(text)}
-              className="border-2 shadow-lg bg-transparent shadow-yellow-900 border-yellow-900 rounded-lg px-4 py-3 w-full mb-4"
+              className="border-2 shadow-lg bg-yellow-500 shadow-yellow-900 border-yellow-900 rounded-lg px-4 py-3 w-full mb-4"
             />
 
             <TextInput
@@ -149,7 +149,7 @@ const LoginScreen = () => {
               textContentType="password"
               onChangeText={(text) => setPassword(text)}
               secureTextEntry
-              className="border-2 shadow-lg shadow-yellow-900 border-yellow-900 rounded-lg px-4 py-3 w-full mb-4"
+              className="border-2 bg-yellow-500 shadow-lg shadow-yellow-900 border-yellow-900 rounded-lg px-4 py-3 w-full mb-4"
             />
 
             <TouchableOpacity
