@@ -10,6 +10,9 @@ import {
   Text,
   TouchableOpacity,
   Alert,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
   Modal,
   Pressable,
 } from "react-native";
@@ -47,7 +50,7 @@ const Game = ({ route }) => {
   const [completedWord, setCompletedWord] = useState("");
   const [englishTranslation, setEnglishTranslation] = useState("");
   const [hintsUsed, setHintsUsed] = useState(0);
-
+  const [loading, setLoading] = useState(true);
   const {
     streak,
     highestStreak,
@@ -57,46 +60,52 @@ const Game = ({ route }) => {
   } = useStreak();
 
   const fetchUserProgress = async () => {
-    const user = auth.currentUser; // Get the current logged-in user
+    try {
+      const user = auth.currentUser; // Get the current logged-in user
 
-    if (user) {
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log("Fetched points: ", userData.mediumPoints); // Log the fetched points
-        setMediumPoints(userData.mediumPoints || 0);
-        setCurrentMediumLevel(userData.currentMediumLevel || 1);
-        setCurrentMediumRound(userData.currentMediumRound || 1);
-        if (userData.selectedMediumWord) {
-          const tokenized = userData.selectedMediumWord.split(" "); // Tokenize the saved word
-          setTokenizedWord(tokenized); // Set the tokenized word
-          setShuffledLetters(
-            shuffleArray([...new Set(tokenized.join("").split(""))])
-          ); // Shuffle unique letters
-          console.log(
-            "Fetched and displayed the saved word: ",
-            userData.selectedMediumWord
-          );
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          console.log("Fetched points: ", userData.mediumPoints); // Log the fetched points
+          setMediumPoints(userData.mediumPoints || 0);
+          setCurrentMediumLevel(userData.currentMediumLevel || 1);
+          setCurrentMediumRound(userData.currentMediumRound || 1);
+          if (userData.selectedMediumWord) {
+            const tokenized = userData.selectedMediumWord.split(" "); // Tokenize the saved word
+            setTokenizedWord(tokenized); // Set the tokenized word
+            setShuffledLetters(
+              shuffleArray([...new Set(tokenized.join("").split(""))])
+            ); // Shuffle unique letters
+            console.log(
+              "Fetched and displayed the saved word: ",
+              userData.selectedMediumWord
+            );
+          } else {
+            selectRandomWord(); // Select a new word if no word was saved
+          }
         } else {
-          selectRandomWord(); // Select a new word if no word was saved
+          console.log("No such document! Creating a new one.");
+          await setDoc(userDocRef, {
+            mediumPoints: 0,
+            currentMediumLevel: 1,
+            currentMediumRound: 1,
+            highestStreak: 0,
+            streak: 0,
+          });
+          setMediumPoints(0); // Initialize points in context
+          setCurrentMediumLevel(1);
+          setCurrentMediumRound(1);
         }
       } else {
-        console.log("No such document! Creating a new one.");
-        await setDoc(userDocRef, {
-          mediumPoints: 0,
-          currentMediumLevel: 1,
-          currentMediumRound: 1,
-          highestStreak: 0,
-          streak: 0,
-        });
-        setMediumPoints(0); // Initialize points in context
-        setCurrentMediumLevel(1);
-        setCurrentMediumRound(1);
+        console.log("User not authenticated");
       }
-    } else {
-      console.log("User not authenticated");
+    } catch (err) {
+      console.log("Error: ", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -389,6 +398,15 @@ const Game = ({ route }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="black" />
+        <Text style={styles.loadingText}>Loading user progress...</Text>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1">
       <StatusBar hidden={true} />
@@ -494,7 +512,20 @@ const Game = ({ route }) => {
               Level: {currentMediumLevel}
             </Text>
           </View>
-          <Text className="text-2xl text-blue-500 font-bold mt-3 mr-10">
+          <View
+            className={`absolute ${
+              Platform.OS === "ios"
+                ? "top-2 right-7 mr-2"
+                : "top-4 right-8 mr-4"
+            }`}
+          ></View>
+          <Text
+            className={`text-xl text-blue-500 font-bold ${
+              Platform.OS === "ios"
+                ? "mt-1 top-[-10] mr-10"
+                : "mt-2 top-0 mr-12"
+            }`}
+          >
             {mediumPoints !== undefined ? mediumPoints : 0}
           </Text>
 
@@ -558,5 +589,22 @@ const Game = ({ route }) => {
     </View>
   );
 };
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#dac91d",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "smoke-white",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "black",
+  },
+});
 
 export default Game;
