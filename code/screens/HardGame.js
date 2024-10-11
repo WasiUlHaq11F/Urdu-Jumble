@@ -12,6 +12,9 @@ import {
   ScrollView,
   Text,
   TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Platform,
   Alert,
   Modal,
   Pressable,
@@ -47,6 +50,7 @@ const Game = ({ route }) => {
   const [completedWord, setCompletedWord] = useState("");
   const [englishTranslation, setEnglishTranslation] = useState("");
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [loading, setLoading] = useState(true);
   const {
     streak,
     highestStreak,
@@ -56,47 +60,53 @@ const Game = ({ route }) => {
   } = useStreak();
 
   const fetchUserProgress = async () => {
-    const user = auth.currentUser; // Get the current logged-in user
+    try {
+      const user = auth.currentUser; // Get the current logged-in user
 
-    if (user) {
-      const userDocRef = doc(db, "users", user.uid);
-      const userDoc = await getDoc(userDocRef);
+      if (user) {
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        console.log("Fetched points: ", userData.hardPoints); // Log the fetched points
-        setHardPoints(userData.hardPoints || 0);
-        setCurrentHardLevel(userData.currentHardLevel || 1);
-        setCurrentHardRound(userData.currentHardRound || 1);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          console.log("Fetched points: ", userData.hardPoints); // Log the fetched points
+          setHardPoints(userData.hardPoints || 0);
+          setCurrentHardLevel(userData.currentHardLevel || 1);
+          setCurrentHardRound(userData.currentHardRound || 1);
 
-        if (userData.selectedHardWord) {
-          const tokenized = userData.selectedHardWord.split(" "); // Tokenize the saved word
-          setTokenizedWord(tokenized); // Set the tokenized word
-          setShuffledLetters(
-            shuffleArray([...new Set(tokenized.join("").split(""))])
-          ); // Shuffle unique letters
-          console.log(
-            "Fetched and displayed the saved word: ",
-            userData.selectedHardWord
-          );
+          if (userData.selectedHardWord) {
+            const tokenized = userData.selectedHardWord.split(" "); // Tokenize the saved word
+            setTokenizedWord(tokenized); // Set the tokenized word
+            setShuffledLetters(
+              shuffleArray([...new Set(tokenized.join("").split(""))])
+            ); // Shuffle unique letters
+            console.log(
+              "Fetched and displayed the saved word: ",
+              userData.selectedHardWord
+            );
+          } else {
+            selectRandomWord(); // Select a new word if no word was saved
+          }
         } else {
-          selectRandomWord(); // Select a new word if no word was saved
+          console.log("No such document! Creating a new one.");
+          await setDoc(userDocRef, {
+            hardPoints: 0,
+            currentHardLevel: 1,
+            currentHardRound: 1,
+            highestStreak: 0,
+            streak: 0,
+          });
+          setHardPoints(0); // Initialize points in context
+          setCurrentHardLevel(1);
+          setCurrentHardRound(1);
         }
       } else {
-        console.log("No such document! Creating a new one.");
-        await setDoc(userDocRef, {
-          hardPoints: 0,
-          currentHardLevel: 1,
-          currentHardRound: 1,
-          highestStreak: 0,
-          streak: 0,
-        });
-        setHardPoints(0); // Initialize points in context
-        setCurrentHardLevel(1);
-        setCurrentHardRound(1);
+        console.log("User not authenticated");
       }
-    } else {
-      console.log("User not authenticated");
+    } catch (error) {
+      console.log("Error: ", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -387,6 +397,15 @@ const Game = ({ route }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="black" />
+        <Text style={styles.loadingText}>Loading user progress...</Text>
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1">
       <StatusBar hidden={true} />
@@ -488,8 +507,21 @@ const Game = ({ route }) => {
               Level: {currentHardLevel}
             </Text>
           </View>
-          <Text className="text-2xl text-blue-500 font-bold mt-3 mr-10">
-            {hardPoints}
+          <View
+            className={`absolute ${
+              Platform.OS === "ios"
+                ? "top-2 right-7 mr-2"
+                : "top-4 right-8 mr-4"
+            }`}
+          ></View>
+          <Text
+            className={`text-xl text-blue-500 font-bold ${
+              Platform.OS === "ios"
+                ? "mt-1 top-[-10] mr-10"
+                : "mt-2 top-0 mr-12"
+            }`}
+          >
+            {hardPoints !== undefined ? hardPoints : 0}
           </Text>
           {/* Empty spaces to display selected letters */}
           <View
@@ -552,317 +584,22 @@ const Game = ({ route }) => {
   );
 };
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#dac91d",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "smoke-white",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "black",
+  },
+});
+
 export default Game;
-
-// import React, { useEffect, useState, useContext } from "react";
-// import { PointsContext } from "../components/PointsContext";
-// import { db } from "../firebase";
-// import { auth } from "../firebase"; // Import Firebase auth for user ID
-// import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
-// import {
-//   View,
-//   SafeAreaView,
-//   StatusBar,
-//   ImageBackground,
-//   Dimensions,
-//   ScrollView,
-//   Text,
-//   TouchableOpacity,
-//   Alert,
-// } from "react-native";
-// import { BlurView } from "expo-blur";
-// import LottieView from "lottie-react-native";
-// const { height } = Dimensions.get("window");
-
-// // Function to shuffle an array (Fisher-Yates Shuffle Algorithm)
-// const shuffleArray = (array) => {
-//   let shuffledArray = array.slice();
-//   for (let i = shuffledArray.length - 1; i > 0; i--) {
-//     const j = Math.floor(Math.random() * (i + 1));
-//     [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
-//   }
-//   return shuffledArray;
-// };
-
-// const Game = ({ route }) => {
-//   const { filteredWords } = route.params;
-//   const [tokenizedWord, setTokenizedWord] = useState([]);
-//   const { hardPoints, setHardPoints } = useContext(PointsContext);
-//   const [selectedLetters, setSelectedLetters] = useState([]); // Store selected letters
-//   const [shuffledLetters, setShuffledLetters] = useState([]);
-//   const [currentHardLevel, setCurrentHardLevel] = useState(1);
-//   const [currentHardRound, setCurrentHardRound] = useState(1);
-//   const [showAnimation, setShowAnimation] = useState(false);
-//   const fetchUserProgress = async () => {
-//     const user = auth.currentUser; // Get the current logged-in user
-
-//     if (user) {
-//       const userDocRef = doc(db, "users", user.uid);
-//       const userDoc = await getDoc(userDocRef);
-
-//       if (userDoc.exists()) {
-//         const userData = userDoc.data();
-//         console.log("Fetched points: ", userData.hardPoints); // Log the fetched points
-//         setHardPoints(userData.hardPoints || 0);
-//         setCurrentHardLevel(userData.currentHardLevel || 1);
-//         setCurrentHardRound(userData.currentHardRound || 1);
-
-//         if (userData.selectedHardWord) {
-//           const tokenized = userData.selectedHardWord.split(" "); // Tokenize the saved word
-//           setTokenizedWord(tokenized); // Set the tokenized word
-//           setShuffledLetters(
-//             shuffleArray([...new Set(tokenized.join("").split(""))])
-//           ); // Shuffle unique letters
-//           console.log(
-//             "Fetched and displayed the saved word: ",
-//             userData.selectedHardWord
-//           );
-//         } else {
-//           selectRandomWord(); // Select a new word if no word was saved
-//         }
-//       } else {
-//         console.log("No such document! Creating a new one.");
-//         await setDoc(userDocRef, {
-//           hardPoints: 0,
-//           currentHardLevel: 1,
-//           currentHardRound: 1,
-//         });
-//         setHardPoints(0); // Initialize points in context
-//         setCurrentHardLevel(1);
-//         setCurrentHardRound(1);
-//       }
-//     } else {
-//       console.log("User not authenticated");
-//     }
-//   };
-
-//   const updateLevelAndRoundInFirestore = async (newLevel, newRound) => {
-//     const user = auth.currentUser;
-//     if (user) {
-//       const userDocRef = doc(db, "users", user.uid); // Define userDocRef here
-//       try {
-//         await updateDoc(userDocRef, {
-//           currentHardLevel: newLevel,
-//           currentHardRound: newRound,
-//         });
-//       } catch (error) {
-//         console.error("Error updating level and round in Firestore: ", error);
-//       }
-//     }
-//   };
-
-//   const updatePointsInFirestore = async (newPoints) => {
-//     const user = auth.currentUser;
-//     const userDocRef = doc(db, "users", user.uid);
-
-//     try {
-//       await updateDoc(userDocRef, { hardPoints: newPoints });
-//       console.log("Points updated in Firestore: ", newPoints);
-//     } catch (error) {
-//       console.error("Error updating points in Firestore: ", error);
-//     }
-//   };
-
-//   // Select a random word and tokenize it
-//   const selectRandomWord = async () => {
-//     const randomIndex = Math.floor(Math.random() * filteredWords.length);
-//     const selectedHardWord = filteredWords[randomIndex];
-
-//     if (selectedHardWord && selectedHardWord["Tokenized Urdu Word"]) {
-//       const tokenized = selectedHardWord["Tokenized Urdu Word"].split(" ");
-//       const uniqueLetters = [...new Set(tokenized.join("").split(""))]; // Get unique letters
-
-//       console.log("The Selected Word is: ", selectedHardWord);
-//       setTokenizedWord(tokenized); // Set the original tokenized word
-//       setShuffledLetters(shuffleArray(uniqueLetters)); // Shuffle only unique letters
-//       setSelectedLetters([]); // Clear selected letters
-
-//       const user = auth.currentUser;
-//       if (user) {
-//         const userDocRef = doc(db, "users", user.uid);
-//         try {
-//           await updateDoc(userDocRef, {
-//             selectedHardWord: selectedHardWord["Tokenized Urdu Word"], // Save the selected word
-//           });
-//           console.log(
-//             "Selected word saved to Firestore: ",
-//             selectedHardWord["Tokenized Urdu Word"]
-//           );
-//         } catch (error) {
-//           console.error("Error saving selected word to Firestore: ", error);
-//         }
-//       }
-//     }
-//   };
-
-//   useEffect(() => {
-//     fetchUserProgress();
-//   }, [filteredWords]);
-
-//   // Function to check if the word is correct
-//   const checkWord = (newSelectedLetters) => {
-//     const userWord = newSelectedLetters.join("");
-//     const originalWord = tokenizedWord.join("");
-
-//     if (userWord === originalWord) {
-//       Alert.alert("Correct!", `You formed the correct word: ${originalWord}`, [
-//         {
-//           text: "OK",
-//           onPress: () => {
-//             const newPoints = hardPoints + 20;
-//             setHardPoints(newPoints);
-//             updatePointsInFirestore(newPoints);
-
-//             // Handle round and level progression
-//             if (currentHardRound < 5) {
-//               const newRound = currentHardRound + 1;
-//               setCurrentHardRound(newRound);
-//               updateLevelAndRoundInFirestore(currentHardRound, newRound);
-//             } else {
-//               const newLevel = currentHardLevel + 1;
-
-//               if (newLevel <= 30) {
-//                 setCurrentHardLevel(newLevel);
-//                 setCurrentHardRound(1);
-//                 updateLevelAndRoundInFirestore(newLevel, 1);
-//                 setShowAnimation(true);
-//                 setTimeout(() => {
-//                   setShowAnimation(false);
-//                 }, 4000);
-//               } else {
-//                 Alert.alert("Congratulations, You have Completed All levels.");
-//               }
-//             }
-//             selectRandomWord();
-//           },
-//         },
-//       ]);
-//     } else {
-//       Alert.alert("Try again", "The word is incorrect.");
-//       setSelectedLetters([]);
-//     }
-//   };
-
-//   // Handle letter touch
-//   const handleLetterPress = (letter) => {
-//     if (selectedLetters.length < tokenizedWord.join("").length) {
-//       const newSelectedLetters = [...selectedLetters, letter];
-//       setSelectedLetters(newSelectedLetters);
-
-//       // If all letters are selected, check the word
-//       if (newSelectedLetters.length === tokenizedWord.join("").length) {
-//         checkWord(newSelectedLetters); // Check if the word formed is correct
-//       }
-//     }
-//   };
-
-//   return (
-//     <View className="flex-1">
-//       <StatusBar hidden={true} />
-
-//       <ImageBackground
-//         source={require("../assets/Board.svg")}
-//         resizeMode="cover"
-//         className="flex-1 items-center justify-center"
-//       >
-//         {showAnimation && (
-//           <BlurView
-//             style={{
-//               position: "absolute",
-//               flex: 1,
-//               top: 0,
-//               left: 0,
-//               right: 0,
-//               bottom: 0,
-//               zIndex: 1, // Ensure it's layered correctly
-//             }}
-//             blurType="light" // You can choose 'light', 'dark', or 'extra light'
-//             blurAmount={50} // Adjust the blur intensity
-//           />
-//         )}
-//         {showAnimation && (
-//           <LottieView
-//             source={require("../assets/animations/roundCompleteAnimation.json")} // Replace with your Lottie animation file
-//             autoPlay
-//             loop={false}
-//             style={{
-//               position: "absolute",
-//               flex: 1,
-//               width: 400,
-//               height: 400,
-//               top: height / 4,
-//               zIndex: 2, // Layer the animation above the blur
-//             }}
-//           />
-//         )}
-//         <SafeAreaView className="flex-1 justify-between items-end w-full flex-end">
-//           <View className="absolute top-3 left-7 ml-2">
-//             <Text className="text-xl text-yellow-500 font-bold">
-//               Level: {currentHardLevel}
-//             </Text>
-//           </View>
-//           <Text className="text-2xl text-blue-500 font-bold mt-3 mr-10">
-//             {hardPoints}
-//           </Text>
-//           {/* Empty spaces to display selected letters */}
-//           <View
-//             className="w-full justify-center flex-row flex-wrap border-4 border-dashed border-black p-2 mt-5"
-//             style={{ height: height * 0.4 }}
-//           >
-//             {tokenizedWord.length > 0 && (
-//               <View
-//                 style={{
-//                   flexDirection: "row-reverse",
-//                   flexWrap: "wrap",
-//                   justifyContent: "center",
-//                   alignItems: "center",
-//                   flex: 1,
-//                 }}
-//               >
-//                 {tokenizedWord
-//                   .join("")
-//                   .split("")
-//                   .map((_, index) => (
-//                     <View
-//                       key={index}
-//                       className="w-[60px] border-2 rounded-lg items-center justify-center font-bold h-[60px] bg-yellow-600 mr-2 mt-1"
-//                     >
-//                       <Text className="text-2xl">
-//                         {selectedLetters[index] || ""}
-//                       </Text>
-//                     </View>
-//                   ))}
-//               </View>
-//             )}
-//           </View>
-
-//           {/* Scrollable area for letters */}
-//           <ScrollView
-//             contentContainerStyle={{
-//               justifyContent: "center",
-//               flexDirection: "row",
-//               flexWrap: "wrap",
-//             }}
-//             className="w-full border-4 border-solid border-black p-2 mt-8"
-//             style={{ height: height * 0.5 }}
-//           >
-//             {shuffledLetters.map((letter, index) => (
-//               <TouchableOpacity
-//                 key={index}
-//                 onPress={() => handleLetterPress(letter)}
-//               >
-//                 <View className="m-2">
-//                   <View className="w-[60px] h-[60px] justify-center items-center border-1 border-black bg-yellow-300 m-5 rounded-lg shadow-lg shadow-yellow-500">
-//                     <Text className="text-2xl">{letter}</Text>
-//                   </View>
-//                 </View>
-//               </TouchableOpacity>
-//             ))}
-//           </ScrollView>
-//         </SafeAreaView>
-//       </ImageBackground>
-//     </View>
-//   );
-// };
-
-// export default Game;
