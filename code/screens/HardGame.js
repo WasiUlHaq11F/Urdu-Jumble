@@ -51,6 +51,7 @@ const Game = ({ route }) => {
   const [englishTranslation, setEnglishTranslation] = useState("");
   const [hintsUsed, setHintsUsed] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [streakAnimation, setStreakAnimation] = useState(false);
   const {
     streak,
     highestStreak,
@@ -314,29 +315,41 @@ const Game = ({ route }) => {
             const newPoints = hardPoints + 20;
             setHardPoints(newPoints);
             updatePointsInFirestore(newPoints);
-            await incrementStreak();
-            // Handle round and level progression
-            if (currentHardRound < 5) {
-              const newRound = currentHardRound + 1;
-              setCurrentHardRound(newRound);
-              updateLevelAndRoundInFirestore(currentHardRound, newRound);
-            } else {
-              const newLevel = currentHardLevel + 1;
 
-              if (newLevel <= 30) {
-                setCurrentHardLevel(newLevel);
-                setCurrentHardRound(1);
-                updateLevelAndRoundInFirestore(newLevel, 1);
-                setShowAnimation(true);
-                playLevelUpAudio();
-                setTimeout(() => {
-                  setShowAnimation(false);
-                }, 4000);
+            await incrementStreak();
+            setStreakAnimation(true);
+
+            // Set a timeout to stop the streak animation after 4 seconds
+            setTimeout(() => {
+              setStreakAnimation(false);
+
+              // After the streak animation is complete, handle the level-clear animation
+              if (currentHardRound < 5) {
+                const newRound = currentHardRound + 1;
+                setCurrentHardRound(newRound);
+                updateLevelAndRoundInFirestore(currentHardLevel, newRound);
               } else {
-                Alert.alert("Congratulations, You have Completed All levels.");
+                const newLevel = currentHardLevel + 1;
+
+                if (newLevel <= 30) {
+                  setCurrentHardLevel(newLevel);
+                  setCurrentHardRound(1);
+                  updateLevelAndRoundInFirestore(newLevel, 1);
+
+                  // Start the level-clear animation after the streak animation completes
+                  setShowAnimation(true);
+                  playLevelUpAudio();
+                  setTimeout(() => {
+                    setShowAnimation(false);
+                  }, 4000);
+                } else {
+                  Alert.alert(
+                    "Congratulations, You have Completed All levels."
+                  );
+                }
               }
-            }
-            selectRandomWord();
+              selectRandomWord();
+            }, 4000); // Wait for the streak animation to finish before proceeding
           },
         },
       ]);
@@ -444,6 +457,52 @@ const Game = ({ route }) => {
               zIndex: 2, // Layer the animation above the blur
             }}
           />
+        )}
+        {streakAnimation && (
+          <BlurView
+            style={{
+              position: "absolute",
+              flex: 1,
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 2, // Ensure it's layered correctly
+            }}
+            blurType="light" // You can choose 'light', 'dark', or 'extra light'
+            blurAmount={50} // Adjust the blur intensity
+          />
+        )}
+        {streakAnimation && (
+          <LottieView
+            source={require("../assets/animations/badgeAnimation.json")} // Replace with your Lottie animation file
+            autoPlay
+            loop={false}
+            style={{
+              position: "absolute",
+              flex: 1,
+              width: 400,
+              height: 400,
+              top: height / 4,
+              zIndex: 2, // Layer the animation above the blur
+            }}
+          />
+        )}
+        {streakAnimation && (
+          <View
+            style={{
+              position: "absolute",
+              top: height / 2.5,
+              alignSelf: "center",
+              zIndex: 3,
+            }}
+          >
+            <Text
+              style={{ fontSize: 24, color: "#c124b3", fontWeight: "bold" }}
+            >
+              Streak: {streak}
+            </Text>
+          </View>
         )}
         <TouchableOpacity
           style={{
