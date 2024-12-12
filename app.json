@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Urdu Jumble",
+    "slug": "urdu-jumble",
+    "description": "This is a Game in Urdu.",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "icon": "./assets/images/Logo.svg",
+    "splash": {
+      "image": "./assets/images/background.svg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "urdu-jumble"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/Logo.svg",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.muhammad_wasi.urdujumble"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["expo-asset"],
+    "extra": {
+      "eas": {
+        "projectId": "79963321-83eb-4720-a66b-6ff52afa86ae"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/79963321-83eb-4720-a66b-6ff52afa86ae"
+    }
+  }
+}
